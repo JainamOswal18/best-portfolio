@@ -37,14 +37,33 @@ export default function Terminal() {
                 <AnimatedBanner text={data.banner} />
                 <div className="section-title">{data.name}</div>
                 <div className="tagline">{data.tagline}</div>
+                <div className="boot-chips" role="group" aria-label="quick actions">
+                  <button type="button" className="chip" onClick={() => handler.runCommand('tldr')}>
+                    <span className="chip-arrow">→</span> tldr
+                    <span className="chip-hint">5-sec pitch</span>
+                  </button>
+                  <button type="button" className="chip" onClick={() => handler.runCommand('whoami')}>
+                    <span className="chip-arrow">→</span> whoami
+                    <span className="chip-hint">identity card</span>
+                  </button>
+                  <button type="button" className="chip" onClick={() => handler.runCommand('experience')}>
+                    <span className="chip-arrow">→</span> experience
+                    <span className="chip-hint">work history</span>
+                  </button>
+                  <button type="button" className="chip" onClick={() => handler.runCommand('resume')}>
+                    <span className="chip-arrow">→</span> resume
+                    <span className="chip-hint">download PDF</span>
+                  </button>
+                  <button type="button" className="chip chip-amber" onClick={() => handler.runCommand('contact')}>
+                    <span className="chip-arrow">→</span> contact
+                    <span className="chip-hint">say hi</span>
+                  </button>
+                </div>
                 <div className="hint">
-                  Type <span className="accent">help</span> to get started.{' '}
-                  <span style={{ marginLeft: 8 }}>
-                    <span className="kbd">Tab</span> autocompletes ·
-                    <span className="kbd">↑</span>
-                    <span className="kbd">↓</span> history ·
-                    <span className="kbd">Ctrl</span>+<span className="kbd">L</span> clear
-                  </span>
+                  or type <span className="accent">help</span> for everything ·{' '}
+                  <span className="kbd">Tab</span> autocompletes ·
+                  <span className="kbd">↑</span><span className="kbd">↓</span> history ·
+                  <span className="kbd">Ctrl</span>+<span className="kbd">L</span> clear
                 </div>
               </div>
             ),

@@ -428,6 +428,7 @@ func GetCommands() []Command {
 		{Name: "banner", Category: "system", Summary: "Reprint the boot banner"},
 		{Name: "history", Category: "system", Summary: "Show command history"},
 		{Name: "echo", Category: "system", Summary: "Echo arguments back to the terminal"},
+		{Name: "tldr", Category: "identity", Summary: "5-second elevator pitch — start here"},
 		{Name: "whoami", Category: "identity", Summary: "Who is Jainam?"},
 		{Name: "about", Category: "identity", Summary: "Bio, education, interests"},
 		{Name: "skills", Category: "skills", Summary: "List all skill categories"},

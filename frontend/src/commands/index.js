@@ -33,6 +33,7 @@ import {
   roastHandler,
   summarizeHandler,
   feedbackHandler,
+  tldrHandler,
 } from './domain.jsx';
 
 export const commands = {
@@ -45,6 +46,8 @@ export const commands = {
   pwd:        { category: 'system',    summary: 'Print working directory',                handler: pwdHandler },
   uname:      { category: 'system',    summary: 'Print system info',                      handler: unameHandler },
 
+  tldr:       { category: 'identity',  summary: 'The 5-second pitch — start here',        handler: tldrHandler },
+  pitch:      { category: 'identity',  summary: 'Alias of tldr',                          handler: tldrHandler },
   whoami:     { category: 'identity',  summary: 'Identity card with photo',               handler: whoamiHandler },
   about:      { category: 'identity',  summary: 'About Jainam (bio, education, interests)', handler: aboutHandler },
 

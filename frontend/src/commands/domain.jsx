@@ -507,6 +507,61 @@ export async function summarizeHandler({ flags, abortSignal }) {
   }
 }
 
+export async function tldrHandler({ flags, abortSignal, terminal }) {
+  if (hasHelpFlag(flags)) {
+    return formatHelpUsage('tldr', 'The 5-second elevator pitch — for the recruiter in a hurry.');
+  }
+  try {
+    const whoami = await apiGet('/api/whoami', { signal: abortSignal });
+    const runCmd = (c) => () => terminal.runCommand?.(c);
+    return (
+      <div className="tldr">
+        <div className="tldr-hero">
+          <span className="tldr-name">{whoami.name}</span>
+          <span className="tldr-sep">·</span>
+          <span className="tldr-title">{whoami.title}</span>
+        </div>
+        <div className="tldr-meta">
+          {whoami.current_role}
+          {whoami.current_org && <> at <span className="accent-2">{whoami.current_org}</span></>}
+          <span className="tldr-sep">·</span>
+          {whoami.location}
+        </div>
+        <div className="tldr-meta muted">{whoami.years_of_experience}</div>
+
+        <div className="tldr-section">
+          <div className="tldr-section-title">what i've shipped</div>
+          <ul className="tldr-list">
+            <li>AI-native recruiter platform — Go + TypeScript microservices on GCP, GDPR-compliant (CurlScape)</li>
+            <li>Resume scoring engine — 1,000+ resumes in parallel, 45 min → 100 s (<span className="accent">27× speedup</span>) at Elite HQ</li>
+            <li>ForesightFlow — 5-microservice retail analytics platform built in <span className="accent">1 month</span>, 97-KPI engine + Gemini insights</li>
+            <li>video.elitehq — Masters Union MBA assessment, browser-to-GCP uploads (500 MB), Gemini 3.0 Pro multimodal eval</li>
+          </ul>
+        </div>
+
+        <div className="tldr-section">
+          <div className="tldr-section-title">community</div>
+          <ul className="tldr-list">
+            <li>GDG on Campus Organizer · 500+ students impacted via AI/Cloud/Full-Stack sessions</li>
+            <li>MetaMask Ambassador · 3 meetups · 200+ developers</li>
+            <li>7+ national hackathons — JPMC CFG, 100x Engineers, Innerve, Imagine</li>
+          </ul>
+        </div>
+
+        <div className="tldr-cta">
+          <button type="button" className="chip" onClick={runCmd('resume')}>resume</button>
+          <button type="button" className="chip" onClick={runCmd('experience')}>experience</button>
+          <button type="button" className="chip" onClick={runCmd('contact')}>contact</button>
+          <button type="button" className="chip chip-amber" onClick={runCmd('ask what should we collab on?')}>ask AI</button>
+        </div>
+      </div>
+    );
+  } catch (e) {
+    if (e.name === 'AbortError') return null;
+    return asError(e);
+  }
+}
+
 export async function feedbackHandler({ args, flags, abortSignal }) {
   if (hasHelpFlag(flags) || !args.length) {
     return formatHelpUsage('feedback <message>', 'Drop Jainam a one-line message. No name, no email — just say it.', [

@@ -75,6 +75,9 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     dispatch({ type: 'SET_VIM_MODE', mode: null });
   }, [dispatch]);
 
+  // forward-ref for runCommand so terminalApi can expose it before it's defined
+  const runCommandRef = useRef(null);
+
   const terminalApi = useMemo(() => ({
     getRegistry: () => commands,
     getHistory: () => stateRef.current.history,
@@ -103,6 +106,8 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     },
     closeStreamBlock: (id) => patchBlock(id, { streamDone: true }),
     failStreamBlock: (id, err) => patchBlock(id, { streamDone: true, streamError: err }),
+    // Used by clickable chips and shortcuts to trigger a command programmatically.
+    runCommand: (cmd) => runCommandRef.current?.(cmd),
   }), [clearAll, addBlock, setTheme, toggleTheme, fadeOut, setRegistryFromInit, showOverlay, hideOverlay, enterContactMode, exitContactMode, enterVimMode, exitVimMode, patchBlock, dispatch]);
 
   const handleContactInput = useCallback(async (line) => {
@@ -299,6 +304,12 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
       setAbortController(null);
     }
   }, [addBlock, dispatch, handleContactInput, handleVimInput, removeBlock, replaceBlock, setAbortController, terminalApi]);
+
+  // Keep the forward ref in sync with the current runCommand closure so chips
+  // / programmatic callers can invoke commands without a circular dep.
+  useEffect(() => {
+    runCommandRef.current = runCommand;
+  }, [runCommand]);
 
   const handleSubmit = useCallback((value) => {
     dispatch({ type: 'SET_INPUT', value: '', resetHistoryIdx: true });
