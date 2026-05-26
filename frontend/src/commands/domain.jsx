@@ -649,20 +649,29 @@ function ContributionGraph({ data }) {
     { value: busiestLabel, label: 'busiest month', wide: true },
   ];
 
-  // Hover tooltip state. Position is anchored to the hovered cell's bounding
-  // box (top-center-ish), with cursor still controlling visibility.
+  // Hover tooltip state. Tooltip's left edge is clamped to the container so
+  // cells near the right/left edge don't push the tooltip off-screen. The
+  // arrow position is set independently via CSS variable so it still points
+  // at the actual cell even when the tooltip is offset.
   const [hover, setHover] = useState(null);
+  const TIP_WIDTH = 175; // conservative — actual max content is ~155px
+  const TIP_MARGIN = 10;
 
   const onCellEnter = (e, day) => {
     if (!day.date) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const containerRect = e.currentTarget.closest('.contrib-graph').getBoundingClientRect();
-    setHover({
-      x: rect.left - containerRect.left + rect.width / 2,
-      y: rect.top - containerRect.top,
-      date: day.date,
-      count: day.count,
-    });
+    const cellRect = e.currentTarget.getBoundingClientRect();
+    const container = e.currentTarget.closest('.contrib-graph');
+    const containerRect = container.getBoundingClientRect();
+    const cellCenterX = cellRect.left - containerRect.left + cellRect.width / 2;
+    const cellTopY = cellRect.top - containerRect.top;
+    // Default: centered above cell. Clamp to container bounds.
+    let left = cellCenterX - TIP_WIDTH / 2;
+    const maxLeft = containerRect.width - TIP_WIDTH - TIP_MARGIN;
+    if (left < TIP_MARGIN) left = TIP_MARGIN;
+    if (left > maxLeft) left = maxLeft;
+    // Arrow position relative to tooltip's left edge.
+    const arrowX = Math.max(10, Math.min(TIP_WIDTH - 10, cellCenterX - left));
+    setHover({ left, top: cellTopY, arrowX, date: day.date, count: day.count });
   };
   const onCellLeave = () => setHover(null);
 
@@ -679,7 +688,16 @@ function ContributionGraph({ data }) {
   return (
     <div className="contrib-graph">
       {hoverInfo && (
-        <div className="contrib-tooltip" style={{ left: hover.x, top: hover.y }} role="tooltip">
+        <div
+          className="contrib-tooltip"
+          style={{
+            left: hover.left,
+            top: hover.top,
+            width: TIP_WIDTH,
+            '--arrow-x': `${hover.arrowX}px`,
+          }}
+          role="tooltip"
+        >
           <div className="contrib-tooltip-count">
             <b>{hoverInfo.count}</b> {hoverInfo.noun}
           </div>
