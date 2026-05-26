@@ -235,11 +235,25 @@ export default function VimOverlay({ onDone }) {
     <div className="vim-overlay" role="dialog" aria-label="vim editor">
       <div className="vim-window">
         <div className="vim-titlebar">
-          <span className="vim-dot red"   />
-          <span className="vim-dot amber" />
-          <span className="vim-dot green" />
+          <button
+            type="button"
+            className="vim-dot red"
+            onClick={() => exit('clean')}
+            aria-label="close vim"
+            title="close vim"
+          />
+          <span className="vim-dot amber" aria-hidden="true" />
+          <span className="vim-dot green" aria-hidden="true" />
           <span className="vim-title">jainam.txt — VIM</span>
           <span className="vim-attempts">esc attempt #{state.attempts}</span>
+          <button
+            type="button"
+            className="vim-mobile-exit"
+            onClick={() => exit('clean')}
+            aria-label="exit vim"
+          >
+            tap to exit
+          </button>
         </div>
 
         <div className="vim-content">

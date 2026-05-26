@@ -282,11 +282,70 @@ a:hover {
   border-radius: 50%;
   display: inline-block;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+  border: none;
+  padding: 0;
 }
 
 .vim-dot.red   { background: #EF4444; }
 .vim-dot.amber { background: #F59E0B; }
 .vim-dot.green { background: #22C55E; }
+
+button.vim-dot {
+  cursor: pointer;
+  position: relative;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+button.vim-dot::before {
+  content: '✕';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: rgba(0,0,0,0);
+  font-weight: 900;
+  transition: color 120ms ease;
+  pointer-events: none;
+}
+
+button.vim-dot:hover,
+button.vim-dot:focus-visible {
+  transform: scale(1.15);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.35),
+    0 0 12px rgba(239, 68, 68, 0.6);
+  outline: none;
+}
+
+button.vim-dot:hover::before,
+button.vim-dot:focus-visible::before {
+  color: rgba(0,0,0,0.7);
+}
+
+/* Mobile exit pill — hidden on desktop, large tap target on mobile */
+.vim-mobile-exit {
+  display: none;
+  margin-left: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--error);
+  color: var(--bg);
+  border: 1px solid rgba(0,0,0,0.25);
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.vim-mobile-exit:active {
+  transform: scale(0.96);
+}
 
 .vim-title {
   flex: 1;
@@ -524,6 +583,8 @@ a:hover {
   }
   .vim-titlebar {
     padding: 8px 10px;
+    flex-wrap: wrap;
+    row-gap: 8px;
   }
   .vim-title {
     font-size: 0.8em;
@@ -531,6 +592,12 @@ a:hover {
   .vim-attempts {
     font-size: 0.7em;
     padding: 1px 6px;
+  }
+  .vim-mobile-exit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
   }
   .vim-statusbar {
     flex-wrap: wrap;
@@ -549,6 +616,20 @@ a:hover {
   }
   .vim-commandline {
     padding: 6px 10px;
+  }
+}
+
+/* Touch devices (no fine pointer / hover) — always show the mobile exit pill regardless of width */
+@media (hover: none) and (pointer: coarse) {
+  .vim-mobile-exit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+  }
+  .vim-titlebar {
+    flex-wrap: wrap;
+    row-gap: 8px;
   }
 }
 
