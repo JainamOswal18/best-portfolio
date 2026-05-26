@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTerminal } from '../hooks/useTerminal.js';
 import { useCommandHandler } from '../hooks/useCommandHandler.jsx';
-import { apiGet } from '../api/client.js';
+import { apiGet, apiPost } from '../api/client.js';
 import OutputBlock from './OutputBlock.jsx';
 import InputLine from './InputLine.jsx';
 import Loader from './Loader.jsx';
@@ -21,6 +21,9 @@ export default function Terminal() {
     bootedRef.current = true;
     const controller = new AbortController();
     const loaderId = handler.addBlock({ output: <Loader label="booting…" /> });
+
+    // fire-and-forget visit ping (silently no-op when KV isn't provisioned)
+    apiPost('/api/visits/track', {}, { signal: controller.signal }).catch(() => {});
 
     apiGet('/api/init', { signal: controller.signal })
       .then((data) => {

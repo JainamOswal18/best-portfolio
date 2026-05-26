@@ -19,11 +19,12 @@ func Health(c *gin.Context) {
 func Init(c *gin.Context) {
 	w := data.GetWhoami()
 	c.JSON(http.StatusOK, gin.H{
-		"name":     w.Name,
-		"tagline":  "Full Stack AI Engineer · Hackathon Junkie · Community Builder",
-		"banner":   data.Banner(),
-		"prompt":   "jainam@portfolio:~$",
-		"commands": data.GetCommands(),
+		"name":              w.Name,
+		"tagline":           "Full Stack AI Engineer · Hackathon Junkie · Community Builder",
+		"resume_updated_at": "2026-05-23",
+		"banner":            data.Banner(),
+		"prompt":            "jainam@portfolio:~$",
+		"commands":          data.GetCommands(),
 	})
 }
 

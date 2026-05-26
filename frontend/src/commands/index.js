@@ -34,6 +34,8 @@ import {
   summarizeHandler,
   feedbackHandler,
   tldrHandler,
+  visitsHandler,
+  guestbookHandler,
 } from './domain.jsx';
 
 export const commands = {
@@ -71,6 +73,8 @@ export const commands = {
 
   contact:    { category: 'system',    summary: 'Send Jainam a message',                  handler: contactHandler },
   feedback:   { category: 'system',    summary: 'Quick one-liner feedback — feedback <message>', handler: feedbackHandler },
+  visits:     { category: 'system',    summary: 'How many people have visited',           handler: visitsHandler },
+  guestbook:  { category: 'system',    summary: 'Sign or read the guestbook — guestbook [<message>]', handler: guestbookHandler },
 
   sudo:       { category: 'fun',       summary: 'Try your luck with sudo',                handler: sudoHandler },
   vim:        { category: 'fun',       summary: 'Open vim (good luck)',                   handler: vimHandler },

@@ -24,7 +24,7 @@ func ConfigFromEnv() Config {
 	return cfg
 }
 
-func New(cfg Config, mailer *services.Mailer, llm *services.LLM) *gin.Engine {
+func New(cfg Config, mailer *services.Mailer, llm *services.LLM, kv *services.KV) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(gin.Logger(), gin.Recovery())
@@ -49,7 +49,11 @@ func New(cfg Config, mailer *services.Mailer, llm *services.LLM) *gin.Engine {
 		api.GET("/resume", handlers.Resume)
 		api.GET("/resume/preview", handlers.ResumePreview)
 		api.GET("/summarize", handlers.Summarize(llm))
+		api.GET("/visits", handlers.VisitsGet(kv))
+		api.GET("/guestbook", handlers.GuestbookList(kv))
 
+		api.POST("/visits/track", middleware.NewLimiter("60-H"), handlers.VisitsTrack(kv))
+		api.POST("/guestbook", middleware.NewLimiter("3-H"), handlers.GuestbookAdd(kv))
 		api.POST("/contact", middleware.NewLimiter("3-H"), handlers.Contact(mailer))
 		api.POST("/feedback", middleware.NewLimiter("5-H"), handlers.Feedback(mailer))
 		api.POST("/ask", middleware.NewLimiter("20-H"), handlers.Ask(llm))
@@ -62,5 +66,6 @@ func New(cfg Config, mailer *services.Mailer, llm *services.LLM) *gin.Engine {
 func Build() *gin.Engine {
 	mailer := services.NewMailerFromEnv()
 	llm := services.NewLLM(data.PortfolioJSON())
-	return New(ConfigFromEnv(), mailer, llm)
+	kv := services.NewKVFromEnv()
+	return New(ConfigFromEnv(), mailer, llm, kv)
 }

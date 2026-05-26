@@ -293,7 +293,8 @@ function ResumeSection({ title, children }) {
 }
 
 async function fetchResumeBundle(signal) {
-  const [whoami, about, exp, skills, community, socials] = await Promise.all([
+  const [init, whoami, about, exp, skills, community, socials] = await Promise.all([
+    apiGet('/api/init', { signal }),
     apiGet('/api/whoami', { signal }),
     apiGet('/api/about', { signal }),
     apiGet('/api/experience', { signal }),
@@ -301,7 +302,30 @@ async function fetchResumeBundle(signal) {
     apiGet('/api/community', { signal }),
     apiGet('/api/socials', { signal }),
   ]);
-  return { whoami, about, experience: exp.experience || [], skills, community, socials: socials.socials || [] };
+  return {
+    updatedAt: init.resume_updated_at,
+    whoami,
+    about,
+    experience: exp.experience || [],
+    skills,
+    community,
+    socials: socials.socials || [],
+  };
+}
+
+function formatRelativeDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  const days = Math.floor((now - d) / 86400000);
+  if (days < 0) return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export async function resumeHandler({ flags, abortSignal }) {
@@ -314,8 +338,9 @@ export async function resumeHandler({ flags, abortSignal }) {
   try {
     if (flags.preview) {
       const bundle = await fetchResumeBundle(abortSignal);
-      const { whoami, about, experience, skills, community, socials } = bundle;
+      const { updatedAt, whoami, about, experience, skills, community, socials } = bundle;
       const pdfUrl = `${getApiBase()}/api/resume`;
+      const updatedLabel = formatRelativeDate(updatedAt);
 
       const skillRows = [
         ['languages', skills.languages],
@@ -328,6 +353,12 @@ export async function resumeHandler({ flags, abortSignal }) {
 
       return (
         <div className="resume">
+          {updatedLabel && (
+            <div className="resume-stamp">
+              <span className="resume-stamp-dot" />
+              last updated <span className="accent">{updatedLabel}</span>
+            </div>
+          )}
           <header className="resume-header">
             <div className="resume-name">{whoami.name}</div>
             <div className="resume-title">{whoami.title} · {whoami.university} · CGPA {whoami.cgpa}</div>
@@ -554,6 +585,91 @@ export async function tldrHandler({ flags, abortSignal, terminal }) {
           <button type="button" className="chip" onClick={runCmd('contact')}>contact</button>
           <button type="button" className="chip chip-amber" onClick={runCmd('ask what should we collab on?')}>ask AI</button>
         </div>
+      </div>
+    );
+  } catch (e) {
+    if (e.name === 'AbortError') return null;
+    return asError(e);
+  }
+}
+
+export async function visitsHandler({ flags, abortSignal }) {
+  if (hasHelpFlag(flags)) return formatHelpUsage('visits', 'Show total page visits.');
+  try {
+    const data = await apiGet('/api/visits', { signal: abortSignal });
+    const n = data.count ?? 0;
+    return (
+      <div className="visits-card">
+        <div className="visits-icon">★</div>
+        <div className="visits-info">
+          <div className="visits-num">{n.toLocaleString()}</div>
+          <div className="visits-label muted">total visits to jainamoswal.xyz</div>
+        </div>
+      </div>
+    );
+  } catch (e) {
+    if (e.name === 'AbortError') return null;
+    return asError(e);
+  }
+}
+
+function formatGuestbookDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const days = Math.floor((Date.now() - d) / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return '1d ago';
+  if (days < 30) return `${days}d ago`;
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export async function guestbookHandler({ args, flags, abortSignal }) {
+  if (hasHelpFlag(flags)) {
+    return formatHelpUsage('guestbook', 'Leave a message or read what people left.', [
+      'guestbook                       see recent entries',
+      'guestbook <your message>        leave a note',
+      'guestbook --name "Your name"    optionally tag your name',
+    ]);
+  }
+
+  // signing path: args present → POST
+  if (args.length) {
+    const name = typeof flags.name === 'string' ? flags.name : '';
+    const message = args.join(' ');
+    if (message.length < 3) return <span className="error">error: say a little more.</span>;
+    try {
+      const res = await apiPost('/api/guestbook', { name, message }, { signal: abortSignal });
+      return <span className="accent">{res?.message || 'signed ✦'}</span>;
+    } catch (e) {
+      if (e.name === 'AbortError') return null;
+      return asError(e);
+    }
+  }
+
+  // reading path
+  try {
+    const data = await apiGet('/api/guestbook', { signal: abortSignal });
+    const entries = data.entries || [];
+    return (
+      <div className="guestbook">
+        <div className="guestbook-header">
+          <span className="muted">{entries.length === 0 ? 'be the first to sign.' : `${entries.length} recent entries`}</span>
+          <span className="muted"> · type <span className="accent">guestbook your message here</span> to sign</span>
+        </div>
+        {entries.length > 0 && (
+          <div className="guestbook-list">
+            {entries.map((e, i) => (
+              <div className="guestbook-entry" key={i}>
+                <div className="guestbook-entry-head">
+                  <span className="guestbook-name">{e.name?.trim() || 'anon'}</span>
+                  <span className="guestbook-date muted">{formatGuestbookDate(e.ts)}</span>
+                </div>
+                <div className="guestbook-msg">{e.message}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   } catch (e) {
