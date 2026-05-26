@@ -32,6 +32,7 @@ import {
   askHandler,
   roastHandler,
   summarizeHandler,
+  feedbackHandler,
 } from './domain.jsx';
 
 export const commands = {
@@ -66,6 +67,7 @@ export const commands = {
   summarize:  { category: 'ai',        summary: 'AI bio summary',                         handler: summarizeHandler },
 
   contact:    { category: 'system',    summary: 'Send Jainam a message',                  handler: contactHandler },
+  feedback:   { category: 'system',    summary: 'Quick one-liner feedback — feedback <message>', handler: feedbackHandler },
 
   sudo:       { category: 'fun',       summary: 'Try your luck with sudo',                handler: sudoHandler },
   vim:        { category: 'fun',       summary: 'Open vim (good luck)',                   handler: vimHandler },

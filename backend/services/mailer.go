@@ -70,6 +70,40 @@ func (m *Mailer) SendContact(name, email, message string) error {
 	return m.sendViaSMTP(name, email, message)
 }
 
+func (m *Mailer) SendFeedback(message string) error {
+	if !m.configured() {
+		return ErrMailerNotConfigured
+	}
+	if m.resendKey != "" {
+		payload := map[string]any{
+			"from":    m.resendFrom,
+			"to":      []string{m.to},
+			"subject": "Portfolio feedback",
+			"html":    feedbackHTML(message),
+		}
+		return postResend(m.resendKey, payload)
+	}
+	// SMTP fallback
+	dialer := gomail.NewDialer(m.smtpHost, m.smtpPort, m.smtpUser, m.smtpPass)
+	msg := gomail.NewMessage()
+	msg.SetHeader("From", m.from)
+	msg.SetHeader("To", m.to)
+	msg.SetHeader("Subject", "Portfolio feedback")
+	msg.SetBody("text/html", feedbackHTML(message))
+	if err := dialer.DialAndSend(msg); err != nil {
+		return fmt.Errorf("send feedback: %w", err)
+	}
+	return nil
+}
+
+func feedbackHTML(message string) string {
+	return fmt.Sprintf(`<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px">
+  <h2 style="margin:0 0 16px">New feedback from your portfolio</h2>
+  <pre style="white-space:pre-wrap;background:#f6f8fa;padding:12px;border-radius:6px;font-family:JetBrains Mono,ui-monospace,monospace">%s</pre>
+  <p style="color:#666;font-size:12px;margin-top:16px">Sent at %s</p>
+</div>`, message, time.Now().UTC().Format(time.RFC3339))
+}
+
 func (m *Mailer) sendViaResend(name, email, message string) error {
 	notify := map[string]any{
 		"from":     m.resendFrom,

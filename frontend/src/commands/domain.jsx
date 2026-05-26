@@ -506,3 +506,24 @@ export async function summarizeHandler({ flags, abortSignal }) {
     return asError(e);
   }
 }
+
+export async function feedbackHandler({ args, flags, abortSignal }) {
+  if (hasHelpFlag(flags) || !args.length) {
+    return formatHelpUsage('feedback <message>', 'Drop Jainam a one-line message. No name, no email — just say it.', [
+      'feedback the matrix easter egg is fire',
+      'feedback typo on the experience page',
+      'feedback let\'s collab on something',
+    ]);
+  }
+  const message = args.join(' ');
+  if (message.length < 3) {
+    return <span className="error">error: say a little more — at least 3 characters.</span>;
+  }
+  try {
+    const data = await apiPost('/api/feedback', { message }, { signal: abortSignal });
+    return <span className="accent">{data?.message || 'Got it. Thanks for the feedback ✦'}</span>;
+  } catch (e) {
+    if (e.name === 'AbortError') return null;
+    return asError(e);
+  }
+}

@@ -147,9 +147,15 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     }
     if (mode.step === 'review') {
       const ans = line.trim().toLowerCase();
-      if (ans !== 'y' && ans !== 'yes') {
+      const yesAnswers = new Set(['y', 'yes', 'send', 'ok', 'confirm']);
+      const noAnswers = new Set(['n', 'no', 'cancel', '--cancel', 'abort', 'q']);
+      if (noAnswers.has(ans)) {
         exitContactMode();
         addBlock({ output: <span className="amber">contact cancelled.</span> });
+        return;
+      }
+      if (!yesAnswers.has(ans)) {
+        addBlock({ output: <span className="muted">please type <span className="accent">y</span> to send or <span className="accent">n</span> to cancel.</span> });
         return;
       }
       const controller = new AbortController();
@@ -239,6 +245,7 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
 
     const tokens = tokenize(line);
     const head = tokens[0];
+    if (!head) return;
     const rest = tokens.slice(1);
     const { args, flags } = parseArgs(rest);
 
@@ -315,12 +322,20 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
 
   const handleCancel = useCallback(() => {
     abortInFlight();
+    // Preserve any in-flight stream block by marking it done + cancelled
+    const openStreams = stateRef.current.blocks.filter((b) => b.isStream && !b.streamDone);
+    openStreams.forEach((b) => {
+      patchBlock(b.id, { streamDone: true, streamCancelled: true });
+    });
     if (stateRef.current.contactMode) {
       exitContactMode();
       addBlock({ output: <span className="muted">^C contact cancelled.</span> });
     } else if (stateRef.current.vimMode) {
       exitVimMode();
       addBlock({ output: <span className="muted">^C — you bailed on vim. coward.</span> });
+    } else if (openStreams.length > 0) {
+      // Stream block already shows the partial text; just print a muted marker
+      addBlock({ output: <span className="muted">^C cancelled — partial response above is what we got.</span> });
     } else {
       addBlock({ output: <span className="muted">^C</span> });
     }

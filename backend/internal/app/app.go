@@ -51,6 +51,7 @@ func New(cfg Config, mailer *services.Mailer, llm *services.LLM) *gin.Engine {
 		api.GET("/summarize", handlers.Summarize(llm))
 
 		api.POST("/contact", middleware.NewLimiter("3-H"), handlers.Contact(mailer))
+		api.POST("/feedback", middleware.NewLimiter("5-H"), handlers.Feedback(mailer))
 		api.POST("/ask", middleware.NewLimiter("20-H"), handlers.Ask(llm))
 		api.POST("/roast", middleware.NewLimiter("20-H"), handlers.Roast(llm))
 	}

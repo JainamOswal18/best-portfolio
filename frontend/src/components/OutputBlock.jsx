@@ -33,7 +33,7 @@ export function renderMarkdownish(text) {
 }
 
 function OutputBlock({ block }) {
-  const { command, contactPrefix, vimPrefix, output, isStream, streamText, streamDone, streamError } = block;
+  const { command, contactPrefix, vimPrefix, output, isStream, streamText, streamDone, streamError, streamCancelled } = block;
   let symbol = '❯';
   let symbolClass = '';
   if (contactPrefix) {
@@ -61,6 +61,7 @@ function OutputBlock({ block }) {
           <span>{renderMarkdownish(streamText)}</span>
           {!streamDone && !streamError && <span className="stream-caret blink" aria-hidden="true" />}
           {streamError && <span className="error">{`\nerror: ${streamError}`}</span>}
+          {streamCancelled && <span className="muted"> (cancelled)</span>}
         </div>
       )}
     </div>
