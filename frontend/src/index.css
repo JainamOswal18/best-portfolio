@@ -1,0 +1,1284 @@
+:root,
+[data-theme='dark'] {
+  --bg: #0F172A;
+  --bg-elev: #1E293B;
+  --fg: #F8FAFC;
+  --fg-muted: #94A3B8;
+  --accent: #22C55E;
+  --accent-2: #06B6D4;
+  --amber: #F59E0B;
+  --muted: #272F42;
+  --border: #475569;
+  --error: #EF4444;
+  --selection-bg: rgba(34, 197, 94, 0.25);
+  --selection-fg: #F8FAFC;
+}
+
+[data-theme='light'] {
+  --bg: #F8FAFC;
+  --bg-elev: #E2E8F0;
+  --fg: #0F172A;
+  --fg-muted: #475569;
+  --accent: #16A34A;
+  --accent-2: #0891B2;
+  --amber: #B45309;
+  --muted: #CBD5E1;
+  --border: #94A3B8;
+  --error: #DC2626;
+  --selection-bg: rgba(22, 163, 74, 0.25);
+  --selection-fg: #0F172A;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-fg);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--amber);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  color: var(--accent-2);
+}
+
+.app {
+  height: 100dvh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(34, 197, 94, 0.06), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(6, 182, 212, 0.05), transparent 60%),
+    var(--bg);
+  transition: opacity 1.8s ease;
+}
+
+.terminal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 20px 24px 0;
+  overflow: hidden;
+}
+
+.terminal-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: auto;
+  padding-bottom: 8px;
+}
+
+.terminal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.terminal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.terminal-scroll::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 4px;
+}
+.terminal-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+
+.block {
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prompt-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.prompt-symbol {
+  color: var(--accent);
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.prompt-symbol.contact {
+  color: var(--amber);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+}
+
+.prompt-cmd {
+  color: var(--accent-2);
+  font-weight: 500;
+}
+
+.output {
+  margin-top: 4px;
+  color: var(--fg);
+}
+
+.output.muted {
+  color: var(--fg-muted);
+}
+
+.muted {
+  color: var(--fg-muted);
+}
+
+.accent {
+  color: var(--accent);
+}
+
+.accent-2 {
+  color: var(--accent-2);
+}
+
+.amber {
+  color: var(--amber);
+}
+
+.error {
+  color: var(--error);
+}
+
+.output .error {
+  color: var(--error);
+}
+
+.output .accent {
+  color: var(--accent);
+}
+
+.output .accent-2 {
+  color: var(--accent-2);
+}
+
+.output .amber {
+  color: var(--amber);
+}
+
+.input-row {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 65%, rgba(15, 23, 42, 0.85) 90%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.input-prompt {
+  color: var(--accent);
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.45);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.input-prompt.contact {
+  color: var(--amber);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.input-prompt.vim,
+.prompt-symbol.vim {
+  color: var(--accent-2);
+  text-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+}
+
+.vim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(800px 400px at 50% 30%, rgba(34, 197, 94, 0.08), transparent 70%),
+    rgba(8, 12, 22, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: vim-fade-in 220ms ease-out;
+}
+
+@keyframes vim-fade-in {
+  from { opacity: 0; transform: scale(0.985); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.vim-window {
+  width: 100%;
+  max-width: 880px;
+  min-height: 70vh;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0f1c;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.12),
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(34, 197, 94, 0.15);
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.vim-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(to bottom, #131c30, #0d1424);
+  border-bottom: 1px solid var(--border);
+}
+
+.vim-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+}
+
+.vim-dot.red   { background: #EF4444; }
+.vim-dot.amber { background: #F59E0B; }
+.vim-dot.green { background: #22C55E; }
+
+.vim-title {
+  flex: 1;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 0.9em;
+  letter-spacing: 0.04em;
+}
+
+.vim-attempts {
+  color: var(--accent);
+  font-size: 0.78em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.vim-content {
+  flex: 1;
+  padding: 14px 0;
+  overflow-y: auto;
+  font-size: 0.95em;
+  line-height: 1.5;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(1.5em - 1px),
+      rgba(255,255,255,0.012) calc(1.5em - 1px),
+      rgba(255,255,255,0.012) 1.5em
+    );
+}
+
+.vim-line {
+  display: flex;
+  align-items: baseline;
+  padding: 0 14px;
+  white-space: pre;
+}
+
+.vim-line.is-cursor {
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.vim-lineno {
+  color: var(--fg-muted);
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  font-size: 0.85em;
+}
+
+.vim-linesep {
+  color: var(--border);
+  margin: 0 12px;
+  user-select: none;
+}
+
+.vim-linetext {
+  color: var(--fg);
+  white-space: pre;
+  flex: 1;
+}
+
+.vim-tilde-mark {
+  color: var(--accent-2);
+  opacity: 0.45;
+}
+
+.vim-cursor {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--bg);
+  min-width: 1ch;
+  padding: 0 1px;
+  border-radius: 1px;
+  animation: vim-blink 1.06s steps(1, end) infinite;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+
+.vim-cursor.insert {
+  width: 2px;
+  min-width: 2px;
+  background: var(--accent-2);
+  color: transparent;
+  box-shadow: 0 0 6px rgba(6, 182, 212, 0.6);
+  animation: vim-blink-fast 0.65s steps(1, end) infinite;
+}
+
+.vim-cursor.command {
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.55);
+}
+
+@keyframes vim-blink {
+  0%, 50%       { opacity: 1; }
+  50.01%, 100%  { opacity: 0; }
+}
+@keyframes vim-blink-fast {
+  0%, 50%       { opacity: 1; }
+  50.01%, 100%  { opacity: 0; }
+}
+
+.vim-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 14px;
+  background: #131c30;
+  border-top: 1px solid var(--border);
+  font-size: 0.85em;
+}
+
+.vim-mode {
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.85em;
+}
+
+.vim-mode-normal {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.vim-mode-insert {
+  background: var(--accent-2);
+  color: var(--bg);
+}
+
+.vim-mode-command {
+  background: var(--amber);
+  color: var(--bg);
+}
+
+.vim-status-file {
+  color: var(--fg);
+  flex: 1;
+}
+
+.vim-status-stats,
+.vim-status-pos {
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.vim-commandline {
+  min-height: 32px;
+  padding: 6px 14px;
+  background: #0a0f1c;
+  border-top: 1px solid var(--border);
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vim-cmd-prompt {
+  color: var(--fg);
+}
+
+.vim-hint {
+  color: var(--fg-muted);
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.vim-flash {
+  color: var(--fg);
+  font-size: 0.92em;
+  animation: vim-flash-in 220ms ease-out;
+}
+
+.vim-flash-title {
+  color: var(--accent-2);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+@keyframes vim-flash-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.vim-exit-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vim-achievements {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 1px dashed var(--accent);
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.04);
+}
+
+.vim-achievement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+}
+
+.vim-achievement-icon {
+  color: var(--amber);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.vim-achievement-title {
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 640px) {
+  .vim-overlay {
+    padding: 8px;
+  }
+  .vim-window {
+    min-height: 80vh;
+    max-height: 96vh;
+    border-radius: 8px;
+  }
+  .vim-titlebar {
+    padding: 8px 10px;
+  }
+  .vim-title {
+    font-size: 0.8em;
+  }
+  .vim-attempts {
+    font-size: 0.7em;
+    padding: 1px 6px;
+  }
+  .vim-statusbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 10px;
+  }
+  .vim-content {
+    font-size: 0.9em;
+    padding: 10px 0;
+  }
+  .vim-line {
+    padding: 0 10px;
+  }
+  .vim-linesep {
+    margin: 0 8px;
+  }
+  .vim-commandline {
+    padding: 6px 10px;
+  }
+}
+
+.input-wrap {
+  position: relative;
+  flex: 1;
+  display: block;
+  min-height: 24px;
+}
+
+.input-real {
+  position: relative;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--fg);
+  caret-color: transparent;
+  line-height: 1.55;
+}
+
+.caret {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1ch;
+  height: 1em;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  pointer-events: none;
+  color: var(--bg);
+  font: inherit;
+  white-space: pre;
+  border-radius: 1px;
+  transition: opacity 80ms linear;
+}
+
+.caret.over-char {
+  color: var(--bg);
+}
+
+.caret.blink {
+  animation: caret-blink 1.06s steps(1, end) infinite;
+}
+
+.stream-caret {
+  display: inline-block;
+  width: 8px;
+  height: 1em;
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.45);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  border-radius: 1px;
+}
+
+.stream-caret.blink {
+  animation: caret-blink 1.06s steps(1, end) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  50% { opacity: 1; }
+  50.01%,
+  100% { opacity: 0; }
+}
+
+.banner {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
+  white-space: pre;
+  font-weight: 500;
+  font-size: clamp(6px, 1.95vw, 12px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  overflow-x: hidden;
+}
+
+.animated-banner {
+  position: relative;
+}
+
+.banner-cell {
+  display: inline;
+  transition: color 240ms ease, text-shadow 240ms ease, transform 240ms ease;
+}
+
+.banner-cell.cycling {
+  color: var(--accent-2);
+  text-shadow: 0 0 8px rgba(6, 182, 212, 0.45);
+  opacity: 0.9;
+}
+
+.banner-cell.settled {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+}
+
+.banner-cell.static {
+  color: var(--fg-muted);
+  text-shadow: none;
+}
+
+.banner-settled {
+  animation: banner-glow 4.2s ease-in-out infinite;
+}
+
+@keyframes banner-glow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.22);
+  }
+  50% {
+    text-shadow:
+      0 0 14px rgba(34, 197, 94, 0.45),
+      0 0 28px rgba(34, 197, 94, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-banner,
+  .banner-cell,
+  .banner-settled {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.tagline {
+  color: var(--fg-muted);
+  margin-top: 6px;
+}
+
+.hint {
+  color: var(--fg-muted);
+  margin-top: 10px;
+  line-height: 1.85;
+}
+
+.hint .kbd {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  color: var(--fg);
+  background: var(--bg-elev);
+  font-size: 12px;
+  margin: 0 1px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 24px;
+  row-gap: 2px;
+}
+
+.help-category {
+  grid-column: 1 / -1;
+  color: var(--fg-muted);
+  margin-top: 12px;
+  margin-bottom: 2px;
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.help-category:first-child {
+  margin-top: 0;
+}
+
+.help-cmd {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.help-summary {
+  color: var(--fg);
+}
+
+.ascii-table {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  background: var(--bg-elev);
+  margin-top: 4px;
+}
+
+.ascii-table .row {
+  display: flex;
+  gap: 18px;
+  align-items: baseline;
+}
+
+.ascii-table .key {
+  color: var(--accent-2);
+  min-width: 12ch;
+}
+
+.ascii-table .val {
+  color: var(--fg);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16px;
+  row-gap: 2px;
+}
+
+.kv .k {
+  color: var(--accent-2);
+}
+
+.kv .v {
+  color: var(--fg);
+}
+
+.section-title {
+  color: var(--accent);
+  font-weight: 700;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.divider {
+  color: var(--border);
+  user-select: none;
+}
+
+.image-frame {
+  position: relative;
+  display: inline-block;
+  padding: 14px;
+  background: linear-gradient(160deg, rgba(34, 197, 94, 0.06), rgba(6, 182, 212, 0.04));
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 0 1px rgba(71, 85, 105, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 60px rgba(34, 197, 94, 0.06);
+}
+
+.image-frame .frame-corner {
+  position: absolute;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+}
+
+.image-frame .frame-corner.tl { top: 3px;    left: 4px;   }
+.image-frame .frame-corner.tr { top: 3px;    right: 4px;  }
+.image-frame .frame-corner.bl { bottom: 3px; left: 4px;   }
+.image-frame .frame-corner.br { bottom: 3px; right: 4px;  }
+
+.image-frame .frame-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 168px;
+  height: 168px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.image-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+  border-radius: 4px;
+}
+
+.image-frame .initials {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 64px;
+  text-shadow: 0 0 16px rgba(34, 197, 94, 0.5);
+  letter-spacing: -0.04em;
+}
+
+.whoami {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.whoami-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.whoami-name {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.18);
+}
+
+.whoami-title {
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.whoami-current {
+  color: var(--fg);
+  font-size: 0.95em;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.whoami-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: live-dot 2s ease-in-out infinite;
+}
+
+@keyframes live-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.85); }
+}
+
+.whoami-kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 18px;
+  row-gap: 6px;
+  align-items: baseline;
+}
+
+.whoami-kv .k {
+  color: var(--accent-2);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.whoami-kv .v {
+  color: var(--fg);
+  line-height: 1.5;
+}
+
+.loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+}
+
+.loader .spin {
+  display: inline-block;
+  width: 1ch;
+  text-align: center;
+}
+
+.matrix-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+
+.matrix-overlay canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.contact-summary {
+  border-left: 2px solid var(--amber);
+  padding-left: 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list-item {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.list-item .bullet {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.list-item .slug {
+  color: var(--accent-2);
+  min-width: 18ch;
+  flex-shrink: 0;
+}
+
+.list-item .desc {
+  color: var(--fg-muted);
+}
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  border-radius: 3px;
+  padding: 0 6px;
+  margin: 2px 4px 2px 0;
+  font-size: 12px;
+}
+
+.coffee {
+  color: var(--amber);
+  white-space: pre;
+  line-height: 1.1;
+}
+
+.resume {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 760px;
+}
+
+.resume-header {
+  border-left: 2px solid var(--accent);
+  padding: 4px 0 4px 14px;
+}
+
+.resume-name {
+  color: var(--fg);
+  font-size: 1.25em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.18);
+}
+
+.resume-title {
+  color: var(--fg-muted);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.resume-contact {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+  font-size: 0.92em;
+  line-height: 1.6;
+}
+
+.resume-contact .dot {
+  color: var(--border);
+  user-select: none;
+}
+
+.resume-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resume-section-title {
+  margin: 0;
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.resume-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.resume-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.resume-row-left {
+  color: var(--fg);
+  font-weight: 500;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.resume-row-right {
+  color: var(--fg-muted);
+  font-size: 0.92em;
+  white-space: nowrap;
+}
+
+.resume-row-sub {
+  color: var(--fg-muted);
+  font-size: 0.92em;
+}
+
+.resume-company {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+.resume-current {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 6px;
+  font-size: 0.75em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 3px;
+  vertical-align: middle;
+  font-weight: 700;
+}
+
+.resume-summary {
+  color: var(--fg-muted);
+  line-height: 1.55;
+  font-size: 0.95em;
+}
+
+.resume-bullets {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resume-bullets li {
+  position: relative;
+  padding-left: 16px;
+  color: var(--fg);
+  line-height: 1.55;
+  font-size: 0.95em;
+}
+
+.resume-bullets li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.85em;
+  top: 1px;
+}
+
+.resume-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resume-skill-key {
+  color: var(--accent-2);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  min-width: 14ch;
+  flex-shrink: 0;
+}
+
+.resume-skill-vals {
+  color: var(--fg);
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.55;
+}
+
+.resume-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  color: var(--fg-muted);
+  font-size: 0.92em;
+}
+
+.resume-footer .dot {
+  color: var(--border);
+}
+
+@media (max-width: 640px) {
+  .resume {
+    gap: 14px;
+  }
+  .resume-row-right {
+    white-space: normal;
+    font-size: 0.88em;
+  }
+  .resume-name {
+    font-size: 1.15em;
+  }
+  .resume-section-title {
+    font-size: 0.8em;
+  }
+  .resume-skill-key {
+    min-width: 0;
+    margin-bottom: 2px;
+  }
+  .resume-skills .resume-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .terminal {
+    padding:
+      max(14px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right))
+      0
+      max(14px, env(safe-area-inset-left));
+  }
+  .input-row {
+    padding: 10px 0 max(18px, env(safe-area-inset-bottom));
+  }
+  .ascii-table .key {
+    min-width: 9ch;
+  }
+  .whoami {
+    gap: 16px;
+  }
+  .help-grid {
+    column-gap: 16px;
+  }
+  .list-item {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+  .list-item .slug {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+  .list-item .desc {
+    flex-basis: 100%;
+    padding-left: 18px;
+    margin-top: -2px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+  .input-real,
+  .caret {
+    font-size: 16px;
+  }
+  .image-frame .frame-body {
+    width: 128px;
+    height: 128px;
+  }
+  .image-frame .initials {
+    font-size: 52px;
+  }
+  .whoami {
+    flex-direction: column;
+  }
+  .ascii-table {
+    padding: 8px 10px;
+    width: 100%;
+  }
+  .ascii-table .row {
+    gap: 12px;
+  }
+  .ascii-table .key {
+    min-width: 8ch;
+  }
+  .kv {
+    column-gap: 10px;
+  }
+  .help-grid {
+    column-gap: 14px;
+    row-gap: 1px;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 0 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret.blink {
+    animation: none;
+    opacity: 1;
+  }
+  .app {
+    transition: none;
+  }
+}
