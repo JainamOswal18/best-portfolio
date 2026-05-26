@@ -1000,6 +1000,44 @@ button.vim-dot:focus-visible::before {
   color: var(--fg);
 }
 
+.help-flags {
+  color: var(--accent-2);
+  font-size: 0.85em;
+  margin-top: 2px;
+  opacity: 0.85;
+  letter-spacing: 0.01em;
+}
+
+.help-footer {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  background: rgba(34, 197, 94, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.help-footer-title {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.82em;
+}
+
+.help-footer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.help-footer-note {
+  font-size: 0.88em;
+  color: var(--fg-muted);
+}
+
 .ascii-table {
   display: inline-block;
   border: 1px solid var(--border);
