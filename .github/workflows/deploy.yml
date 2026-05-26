@@ -44,15 +44,16 @@ jobs:
       run:
         working-directory: ./backend
     steps:
+      - uses: actions/checkout@v4
+
       - name: Verify secrets are configured
+        working-directory: ./
         run: |
           if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "::warning::Vercel secrets not configured — skipping deploy."
             echo "Add VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID_BACKEND to repo secrets."
             exit 78
           fi
-
-      - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -93,15 +94,16 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
+      - uses: actions/checkout@v4
+
       - name: Verify secrets are configured
+        working-directory: ./
         run: |
           if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "::warning::Vercel secrets not configured — skipping deploy."
             echo "Add VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID_FRONTEND to repo secrets."
             exit 78
           fi
-
-      - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4

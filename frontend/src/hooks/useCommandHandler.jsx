@@ -340,7 +340,7 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
       addBlock({ output: <span className="muted">^C</span> });
     }
     dispatch({ type: 'SET_INPUT', value: '', resetHistoryIdx: true });
-  }, [abortInFlight, addBlock, dispatch, exitContactMode, exitVimMode]);
+  }, [abortInFlight, addBlock, dispatch, exitContactMode, exitVimMode, patchBlock]);
 
   const handleClearScreen = useCallback(() => clearAll(), [clearAll]);
 
