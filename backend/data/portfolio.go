@@ -439,6 +439,7 @@ func GetCommands() []Command {
 		{Name: "resume", Category: "resume", Summary: "Open the resume PDF"},
 		{Name: "resume preview", Category: "resume", Summary: "Plain-text resume in the terminal"},
 		{Name: "socials", Category: "socials", Summary: "GitHub, LinkedIn, email"},
+		{Name: "gh", Category: "socials", Summary: "Contribution graph — last 52 weeks, both accounts"},
 		{Name: "contact", Category: "socials", Summary: "Send a message to Jainam"},
 		{Name: "feedback", Category: "socials", Summary: "Quick one-line feedback to Jainam's inbox"},
 		{Name: "ask <question>", Category: "ai", Summary: "Ask the AI assistant about Jainam"},

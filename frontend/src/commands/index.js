@@ -36,6 +36,7 @@ import {
   tldrHandler,
   visitsHandler,
   guestbookHandler,
+  ghHandler,
 } from './domain.jsx';
 
 export const commands = {
@@ -64,6 +65,7 @@ export const commands = {
 
   socials:    { category: 'socials',   summary: 'All social links',                       handler: socialsHandler },
   github:     { category: 'socials',   summary: 'Open GitHub',                            handler: githubHandler },
+  gh:         { category: 'socials',   summary: 'Contribution graph — last 52 weeks',     handler: ghHandler },
   linkedin:   { category: 'socials',   summary: 'Open LinkedIn',                          handler: linkedinHandler },
   email:      { category: 'socials',   summary: 'Open mailto:',                           handler: emailHandler },
 

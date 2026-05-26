@@ -593,6 +593,113 @@ export async function tldrHandler({ flags, abortSignal, terminal }) {
   }
 }
 
+function contribLevel(count) {
+  if (!count || count === 0) return 0;
+  if (count < 4)  return 1;
+  if (count < 10) return 2;
+  if (count < 20) return 3;
+  return 4;
+}
+
+function monthLabelsFromWeeks(weeks) {
+  // For each week, look at the first dated day. When the month changes vs the
+  // previous week, drop a label at that column. Skip the very first week to
+  // avoid a duplicate at column 1 when the calendar starts mid-month.
+  const labels = [];
+  let prev = null;
+  weeks.forEach((week, idx) => {
+    const first = week.find((d) => d.date);
+    if (!first) return;
+    const month = first.date.slice(0, 7); // YYYY-MM
+    if (month !== prev) {
+      if (idx > 0) {
+        const name = new Date(first.date + 'T00:00:00Z').toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' });
+        labels.push({ col: idx + 1, label: name.toLowerCase() });
+      }
+      prev = month;
+    }
+  });
+  return labels;
+}
+
+function ContributionGraph({ data }) {
+  const weeks = data.weeks || [];
+  const months = monthLabelsFromWeeks(weeks);
+  const cols = weeks.length;
+  const stats = [
+    { value: data.total?.toLocaleString() ?? '0', label: 'total' },
+    { value: data.active_days ?? 0, label: 'active days' },
+    { value: data.top_streak ?? 0, label: 'top streak' },
+    { value: data.current_streak ?? 0, label: 'current streak' },
+  ];
+  return (
+    <div className="contrib-graph">
+      <div className="contrib-header">
+        <span className="contrib-title">contributions · last 52 weeks</span>
+        <span className="contrib-accounts muted">{(data.accounts || []).join(' + ')}</span>
+      </div>
+
+      <div className="contrib-body">
+        <div className="contrib-months" style={{ gridTemplateColumns: `18px repeat(${cols}, 1fr)` }}>
+          <span />
+          {months.map((m) => (
+            <span key={m.col} style={{ gridColumnStart: m.col + 1 }}>{m.label}</span>
+          ))}
+        </div>
+        <div className="contrib-row">
+          <div className="contrib-day-labels"><span>M</span><span>W</span><span>F</span></div>
+          <div
+            className="contrib-grid"
+            style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+            aria-label={`${data.total} contributions in the last year`}
+          >
+            {weeks.flatMap((week, wi) =>
+              week.map((day, di) => (
+                <div
+                  key={`${wi}-${di}`}
+                  className={`contrib-cell lv-${contribLevel(day.count)}`}
+                  title={day.date ? `${day.date} · ${day.count} contribution${day.count === 1 ? '' : 's'}` : ''}
+                />
+              )),
+            )}
+          </div>
+        </div>
+        <div className="contrib-legend">
+          <span>less</span>
+          <span className="contrib-cell lv-0" />
+          <span className="contrib-cell lv-1" />
+          <span className="contrib-cell lv-2" />
+          <span className="contrib-cell lv-3" />
+          <span className="contrib-cell lv-4" />
+          <span>more</span>
+        </div>
+      </div>
+
+      <div className="contrib-stats">
+        {stats.map((s) => (
+          <div key={s.label}>
+            <b>{s.value}</b>
+            <span>{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export async function ghHandler({ flags, abortSignal }) {
+  if (hasHelpFlag(flags)) {
+    return formatHelpUsage('gh', 'GitHub contribution graph — last 52 weeks, both accounts combined.');
+  }
+  try {
+    const data = await apiGet('/api/contributions', { signal: abortSignal });
+    return <ContributionGraph data={data} />;
+  } catch (e) {
+    if (e.name === 'AbortError') return null;
+    return asError(e);
+  }
+}
+
 export async function visitsHandler({ flags, abortSignal }) {
   if (hasHelpFlag(flags)) return formatHelpUsage('visits', 'Show total page visits.');
   try {

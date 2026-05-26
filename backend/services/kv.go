@@ -141,9 +141,16 @@ func (k *KV) Get(key string) (string, error) {
 	return "", nil
 }
 
-// LPush prepends one entry to a list and trims to maxLen.
+// SetEx writes a string value with a TTL in seconds.
+func (k *KV) SetEx(key, value string, ttlSeconds int) error {
+	_, err := k.callBody(http.MethodPost, value, "setex", key, fmt.Sprintf("%d", ttlSeconds))
+	return err
+}
+
+// LPush prepends one entry to a list and trims to maxLen. The value goes in
+// the POST body so it can safely contain slashes, special chars, etc.
 func (k *KV) LPushTrim(key, value string, maxLen int) error {
-	if _, err := k.postJSON([]string{value}, "lpush", key); err != nil {
+	if _, err := k.callBody(http.MethodPost, value, "lpush", key); err != nil {
 		return err
 	}
 	if maxLen > 0 {
@@ -152,6 +159,35 @@ func (k *KV) LPushTrim(key, value string, maxLen int) error {
 		}
 	}
 	return nil
+}
+
+// callBody is like call() but sends the request body as raw text (not JSON).
+// Upstash REST treats the raw body as the value for commands like LPUSH/SET.
+func (k *KV) callBody(method, body string, parts ...string) ([]byte, error) {
+	if !k.Enabled() {
+		return nil, ErrKVNotConfigured
+	}
+	encoded := make([]string, len(parts))
+	for i, p := range parts {
+		encoded[i] = url.PathEscape(p)
+	}
+	endpoint := k.base + "/" + strings.Join(encoded, "/")
+	req, err := http.NewRequest(method, endpoint, strings.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+k.token)
+	client := &http.Client{Timeout: 8 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return respBody, nil
+	}
+	return nil, fmt.Errorf("kv %d: %s", resp.StatusCode, strings.TrimSpace(string(respBody)))
 }
 
 // LRange returns up to count most-recent entries (since we LPush, index 0 is newest).

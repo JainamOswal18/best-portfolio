@@ -24,7 +24,7 @@ func ConfigFromEnv() Config {
 	return cfg
 }
 
-func New(cfg Config, mailer *services.Mailer, llm *services.LLM, kv *services.KV) *gin.Engine {
+func New(cfg Config, mailer *services.Mailer, llm *services.LLM, kv *services.KV, gh *services.GitHub) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(gin.Logger(), gin.Recovery())
@@ -51,6 +51,7 @@ func New(cfg Config, mailer *services.Mailer, llm *services.LLM, kv *services.KV
 		api.GET("/summarize", handlers.Summarize(llm))
 		api.GET("/visits", handlers.VisitsGet(kv))
 		api.GET("/guestbook", handlers.GuestbookList(kv))
+		api.GET("/contributions", handlers.Contributions(gh, kv))
 
 		api.POST("/visits/track", middleware.NewLimiter("60-H"), handlers.VisitsTrack(kv))
 		api.POST("/guestbook", middleware.NewLimiter("3-H"), handlers.GuestbookAdd(kv))
@@ -67,5 +68,6 @@ func Build() *gin.Engine {
 	mailer := services.NewMailerFromEnv()
 	llm := services.NewLLM(data.PortfolioJSON())
 	kv := services.NewKVFromEnv()
-	return New(ConfigFromEnv(), mailer, llm, kv)
+	gh := services.NewGitHubFromEnv()
+	return New(ConfigFromEnv(), mailer, llm, kv, gh)
 }
