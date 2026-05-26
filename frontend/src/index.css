@@ -1070,7 +1070,12 @@ button.vim-dot:focus-visible::before {
   grid-template-rows: repeat(7, 1fr);
   grid-auto-flow: column;
   gap: clamp(1px, 0.24vw, 3px);
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.contrib-body {
   min-width: 0;
 }
 
