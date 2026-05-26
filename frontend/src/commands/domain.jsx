@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { apiGet, apiPost, apiStream, getApiBase } from '../api/client.js';
 import { hasHelpFlag, formatHelpUsage } from './helpers.js';
 import ImageRenderer from '../components/ImageRenderer.jsx';
@@ -601,39 +602,92 @@ function contribLevel(count) {
   return 4;
 }
 
-function monthLabelsFromWeeks(weeks) {
-  // For each week, look at the first dated day. When the month changes vs the
-  // previous week, drop a label at that column. Skip the very first week to
-  // avoid a duplicate at column 1 when the calendar starts mid-month.
-  const labels = [];
-  let prev = null;
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// Aggregate contributions by month label. For each visible month, sum every
+// day that falls within it, count active days, and remember the first column
+// where that month starts (used to position the per-month total under the
+// month label).
+function buildMonthSummaries(weeks) {
+  const map = new Map(); // YYYY-MM → { total, activeDays, firstCol, name }
   weeks.forEach((week, idx) => {
-    const first = week.find((d) => d.date);
-    if (!first) return;
-    const month = first.date.slice(0, 7); // YYYY-MM
-    if (month !== prev) {
-      if (idx > 0) {
-        const name = new Date(first.date + 'T00:00:00Z').toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' });
-        labels.push({ col: idx + 1, label: name.toLowerCase() });
+    week.forEach((d) => {
+      if (!d.date) return;
+      const ym = d.date.slice(0, 7);
+      let entry = map.get(ym);
+      if (!entry) {
+        const name = new Date(d.date + 'T00:00:00Z').toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' }).toLowerCase();
+        entry = { total: 0, activeDays: 0, firstCol: idx + 1, name };
+        map.set(ym, entry);
       }
-      prev = month;
-    }
+      entry.total += d.count;
+      if (d.count > 0) entry.activeDays += 1;
+    });
   });
-  return labels;
+  return Array.from(map.entries()).map(([ym, v]) => ({ ym, ...v }));
 }
 
 function ContributionGraph({ data }) {
   const weeks = data.weeks || [];
-  const months = monthLabelsFromWeeks(weeks);
+  const months = buildMonthSummaries(weeks);
   const cols = weeks.length;
+
+  // Busiest month — surface in stats. Skip the first month if it's a partial
+  // (i.e. the year window starts mid-month) so the highlight isn't misleading.
+  const busiest = months
+    .slice(months.length > 1 ? 1 : 0)
+    .reduce((best, m) => (!best || m.total > best.total ? m : best), null);
+  const busiestLabel = busiest
+    ? `${busiest.name} · ${busiest.total.toLocaleString()}`
+    : '—';
+
   const stats = [
     { value: data.total?.toLocaleString() ?? '0', label: 'total' },
     { value: data.active_days ?? 0, label: 'active days' },
     { value: data.top_streak ?? 0, label: 'top streak' },
     { value: data.current_streak ?? 0, label: 'current streak' },
+    { value: busiestLabel, label: 'busiest month', wide: true },
   ];
+
+  // Hover tooltip state. Position is anchored to the hovered cell's bounding
+  // box (top-center-ish), with cursor still controlling visibility.
+  const [hover, setHover] = useState(null);
+
+  const onCellEnter = (e, day) => {
+    if (!day.date) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const containerRect = e.currentTarget.closest('.contrib-graph').getBoundingClientRect();
+    setHover({
+      x: rect.left - containerRect.left + rect.width / 2,
+      y: rect.top - containerRect.top,
+      date: day.date,
+      count: day.count,
+    });
+  };
+  const onCellLeave = () => setHover(null);
+
+  const hoverInfo = hover
+    ? (() => {
+        const d = new Date(hover.date + 'T00:00:00Z');
+        const weekday = WEEKDAYS[d.getUTCDay()];
+        const pretty = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+        const noun = hover.count === 1 ? 'contribution' : 'contributions';
+        return { weekday, pretty, count: hover.count, noun };
+      })()
+    : null;
+
   return (
     <div className="contrib-graph">
+      {hoverInfo && (
+        <div className="contrib-tooltip" style={{ left: hover.x, top: hover.y }} role="tooltip">
+          <div className="contrib-tooltip-count">
+            <b>{hoverInfo.count}</b> {hoverInfo.noun}
+          </div>
+          <div className="contrib-tooltip-date">
+            {hoverInfo.weekday}, {hoverInfo.pretty}
+          </div>
+        </div>
+      )}
       <div className="contrib-header">
         <span className="contrib-title">contributions · last 52 weeks</span>
         <span className="contrib-accounts muted">{(data.accounts || []).join(' + ')}</span>
@@ -643,7 +697,10 @@ function ContributionGraph({ data }) {
         <div className="contrib-months" style={{ gridTemplateColumns: `18px repeat(${cols}, 1fr)` }}>
           <span />
           {months.map((m) => (
-            <span key={m.col} style={{ gridColumnStart: m.col + 1 }}>{m.label}</span>
+            <span key={m.ym} className="contrib-month" style={{ gridColumnStart: m.firstCol + 1 }}>
+              <span className="contrib-month-name">{m.name}</span>
+              <span className="contrib-month-total">{m.total}</span>
+            </span>
           ))}
         </div>
         <div className="contrib-row">
@@ -658,7 +715,10 @@ function ContributionGraph({ data }) {
                 <div
                   key={`${wi}-${di}`}
                   className={`contrib-cell lv-${contribLevel(day.count)}`}
-                  title={day.date ? `${day.date} · ${day.count} contribution${day.count === 1 ? '' : 's'}` : ''}
+                  onMouseEnter={(e) => onCellEnter(e, day)}
+                  onMouseLeave={onCellLeave}
+                  onFocus={(e) => onCellEnter(e, day)}
+                  onBlur={onCellLeave}
                 />
               )),
             )}
@@ -677,7 +737,7 @@ function ContributionGraph({ data }) {
 
       <div className="contrib-stats">
         {stats.map((s) => (
-          <div key={s.label}>
+          <div key={s.label} className={s.wide ? 'wide' : ''}>
             <b>{s.value}</b>
             <span>{s.label}</span>
           </div>
