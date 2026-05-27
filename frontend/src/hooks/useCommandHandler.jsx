@@ -75,6 +75,14 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     dispatch({ type: 'SET_VIM_MODE', mode: null });
   }, [dispatch]);
 
+  const enterGuestbookMode = useCallback((message) => {
+    dispatch({ type: 'SET_GUESTBOOK_MODE', mode: { message } });
+  }, [dispatch]);
+
+  const exitGuestbookMode = useCallback(() => {
+    dispatch({ type: 'SET_GUESTBOOK_MODE', mode: null });
+  }, [dispatch]);
+
   // forward-ref for runCommand so terminalApi can expose it before it's defined
   const runCommandRef = useRef(null);
 
@@ -95,6 +103,8 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     enterVimMode,
     exitVimMode,
     isVimMode: () => Boolean(stateRef.current.vimMode),
+    enterGuestbookMode,
+    exitGuestbookMode,
     openStreamBlock: () => {
       const id = newBlockId('s');
       dispatch({ type: 'ADD_BLOCK', block: { id, isStream: true, streamText: '', streamDone: false, streamError: null } });
@@ -108,7 +118,7 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     failStreamBlock: (id, err) => patchBlock(id, { streamDone: true, streamError: err }),
     // Used by clickable chips and shortcuts to trigger a command programmatically.
     runCommand: (cmd) => runCommandRef.current?.(cmd),
-  }), [clearAll, addBlock, setTheme, toggleTheme, fadeOut, setRegistryFromInit, showOverlay, hideOverlay, enterContactMode, exitContactMode, enterVimMode, exitVimMode, patchBlock, dispatch]);
+  }), [clearAll, addBlock, setTheme, toggleTheme, fadeOut, setRegistryFromInit, showOverlay, hideOverlay, enterContactMode, exitContactMode, enterVimMode, exitVimMode, enterGuestbookMode, exitGuestbookMode, patchBlock, dispatch]);
 
   const handleContactInput = useCallback(async (line) => {
     const mode = stateRef.current.contactMode;
@@ -226,6 +236,41 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     }
   }, [addBlock, dispatch, exitVimMode]);
 
+  const handleGuestbookInput = useCallback(async (line) => {
+    const mode = stateRef.current.guestbookMode;
+    if (!mode) return;
+    const trimmed = line.trim();
+    addBlock({ command: line, guestbookPrefix: 'name' });
+
+    if (trimmed.toLowerCase() === 'cancel' || trimmed === '--cancel') {
+      exitGuestbookMode();
+      addBlock({ output: <span className="amber">guestbook cancelled.</span> });
+      return;
+    }
+    // Empty / "skip" / "anon" → anonymous
+    let name = trimmed;
+    if (name === '' || /^(skip|anon|anonymous|-)$/i.test(name)) name = '';
+    if (name.length > 60) {
+      addBlock({ output: <span className="error">error: name too long (max 60 chars). try again or type "skip".</span> });
+      return;
+    }
+
+    const controller = new AbortController();
+    setAbortController(controller);
+    const loaderId = addBlock({ output: <Loader label="signing…" /> });
+    try {
+      const res = await apiPost('/api/guestbook', { name, message: mode.message }, { signal: controller.signal });
+      replaceBlock(loaderId, { output: <span className="accent">{res?.message || 'signed ✦'}</span> });
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        replaceBlock(loaderId, { output: <span className="error">error: {err.message || String(err)}</span> });
+      }
+    } finally {
+      setAbortController(null);
+      exitGuestbookMode();
+    }
+  }, [addBlock, exitGuestbookMode, replaceBlock, setAbortController]);
+
   const runCommand = useCallback(async (rawLine) => {
     const line = rawLine.trim();
     if (!line) {
@@ -241,6 +286,12 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
 
     if (stateRef.current.contactMode) {
       await handleContactInput(line);
+      dispatch({ type: 'PUSH_HISTORY', value: line });
+      return;
+    }
+
+    if (stateRef.current.guestbookMode) {
+      await handleGuestbookInput(line);
       dispatch({ type: 'PUSH_HISTORY', value: line });
       return;
     }
@@ -303,7 +354,7 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     } finally {
       setAbortController(null);
     }
-  }, [addBlock, dispatch, handleContactInput, handleVimInput, removeBlock, replaceBlock, setAbortController, terminalApi]);
+  }, [addBlock, dispatch, handleContactInput, handleVimInput, handleGuestbookInput, removeBlock, replaceBlock, setAbortController, terminalApi]);
 
   // Keep the forward ref in sync with the current runCommand closure so chips
   // / programmatic callers can invoke commands without a circular dep.
@@ -344,6 +395,9 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
     } else if (stateRef.current.vimMode) {
       exitVimMode();
       addBlock({ output: <span className="muted">^C — you bailed on vim. coward.</span> });
+    } else if (stateRef.current.guestbookMode) {
+      exitGuestbookMode();
+      addBlock({ output: <span className="muted">^C guestbook cancelled.</span> });
     } else if (openStreams.length > 0) {
       // Stream block already shows the partial text; just print a muted marker
       addBlock({ output: <span className="muted">^C cancelled — partial response above is what we got.</span> });
@@ -351,7 +405,7 @@ export function useCommandHandler({ state, dispatch, setAbortController, abortIn
       addBlock({ output: <span className="muted">^C</span> });
     }
     dispatch({ type: 'SET_INPUT', value: '', resetHistoryIdx: true });
-  }, [abortInFlight, addBlock, dispatch, exitContactMode, exitVimMode, patchBlock]);
+  }, [abortInFlight, addBlock, dispatch, exitContactMode, exitVimMode, exitGuestbookMode, patchBlock]);
 
   const handleClearScreen = useCallback(() => clearAll(), [clearAll]);
 

@@ -314,19 +314,29 @@ async function fetchResumeBundle(signal) {
   };
 }
 
-function formatRelativeDate(iso) {
+// Calendar-day difference (not 24h windows), so something at 11pm and
+// something the next morning correctly report "yesterday" / "today".
+function calendarDaysAgo(iso) {
   if (!iso) return null;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return null;
   const now = new Date();
-  const days = Math.floor((now - d) / 86400000);
-  if (days < 0) return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return { days: Math.round((nowDay - dDay) / 86400000), date: d };
+}
+
+function formatRelativeDate(iso) {
+  const r = calendarDaysAgo(iso);
+  if (!r) return null;
+  const { days, date } = r;
+  if (days < 0) return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   if (days === 0) return 'today';
   if (days === 1) return 'yesterday';
   if (days < 7) return `${days} days ago`;
   if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
   if (days < 365) return `${Math.floor(days / 30)} months ago`;
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export async function resumeHandler({ flags, abortSignal }) {
@@ -799,37 +809,38 @@ export async function visitsHandler({ flags, abortSignal }) {
 }
 
 function formatGuestbookDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  const days = Math.floor((Date.now() - d) / 86400000);
-  if (days === 0) return 'today';
-  if (days === 1) return '1d ago';
-  if (days < 30) return `${days}d ago`;
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const r = calendarDaysAgo(iso);
+  if (!r) return '';
+  const { days, date } = r;
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export async function guestbookHandler({ args, flags, abortSignal }) {
+export async function guestbookHandler({ args, flags, abortSignal, terminal }) {
   if (hasHelpFlag(flags)) {
     return formatHelpUsage('guestbook', 'Leave a message or read what people left.', [
-      'guestbook                       see recent entries',
-      'guestbook <your message>        leave a note',
-      'guestbook --name "Your name"    optionally tag your name',
+      'guestbook                          see recent entries',
+      'guestbook <your message>           leave a note (you will be asked for your name next)',
     ]);
   }
 
-  // signing path: args present → POST
+  // signing path: args present → capture message, enter name-prompt mode
   if (args.length) {
-    const name = typeof flags.name === 'string' ? flags.name : '';
     const message = args.join(' ');
     if (message.length < 3) return <span className="error">error: say a little more.</span>;
-    try {
-      const res = await apiPost('/api/guestbook', { name, message }, { signal: abortSignal });
-      return <span className="accent">{res?.message || 'signed ✦'}</span>;
-    } catch (e) {
-      if (e.name === 'AbortError') return null;
-      return asError(e);
-    }
+    if (message.length > 280) return <span className="error">error: max 280 chars.</span>;
+    terminal.enterGuestbookMode(message);
+    return (
+      <div>
+        <div className="muted">message: <span className="accent">{message}</span></div>
+        <div className="muted" style={{ marginTop: 4 }}>
+          what should we call you? (hit <span className="accent">Enter</span> for <span className="accent-2">anon</span>, or type <span className="accent">cancel</span> to bail)
+        </div>
+      </div>
+    );
   }
 
   // reading path

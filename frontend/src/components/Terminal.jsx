@@ -162,6 +162,9 @@ export default function Terminal() {
   } else if (state.vimMode) {
     prefix = ':';
     promptClass = 'vim';
+  } else if (state.guestbookMode) {
+    prefix = 'name ❯';
+    promptClass = 'contact';
   }
 
   return (

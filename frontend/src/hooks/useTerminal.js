@@ -9,6 +9,7 @@ const initialState = {
   theme: 'dark',
   contactMode: null,
   vimMode: null,
+  guestbookMode: null,
   registry: null,
   overlay: null,
   fading: false,
@@ -64,6 +65,8 @@ function reducer(state, action) {
       return { ...state, vimMode: action.mode };
     case 'PATCH_VIM':
       return { ...state, vimMode: { ...(state.vimMode || {}), ...action.patch } };
+    case 'SET_GUESTBOOK_MODE':
+      return { ...state, guestbookMode: action.mode };
     case 'SET_CONTACT_MODE':
       return { ...state, contactMode: action.mode };
     case 'PATCH_CONTACT':

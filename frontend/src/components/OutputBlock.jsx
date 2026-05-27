@@ -33,7 +33,7 @@ export function renderMarkdownish(text) {
 }
 
 function OutputBlock({ block }) {
-  const { command, contactPrefix, vimPrefix, output, isStream, streamText, streamDone, streamError, streamCancelled } = block;
+  const { command, contactPrefix, vimPrefix, guestbookPrefix, output, isStream, streamText, streamDone, streamError, streamCancelled } = block;
   let symbol = '❯';
   let symbolClass = '';
   if (contactPrefix) {
@@ -42,6 +42,9 @@ function OutputBlock({ block }) {
   } else if (vimPrefix) {
     symbol = vimPrefix;
     symbolClass = ' vim';
+  } else if (guestbookPrefix) {
+    symbol = `${guestbookPrefix} ❯`;
+    symbolClass = ' contact';
   }
   return (
     <div className="block">
