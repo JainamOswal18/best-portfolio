@@ -812,11 +812,13 @@ function formatGuestbookDate(iso) {
   const r = calendarDaysAgo(iso);
   if (!r) return '';
   const { days, date } = r;
-  if (days <= 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const time = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (days <= 0)   return `today · ${time}`;
+  if (days === 1)  return `yesterday · ${time}`;
+  if (days < 7)    return `${days}d ago · ${time}`;
+  if (days < 30)   return `${Math.floor(days / 7)}w ago · ${time}`;
+  const datePart = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return `${datePart} · ${time}`;
 }
 
 export async function guestbookHandler({ args, flags, abortSignal, terminal }) {
